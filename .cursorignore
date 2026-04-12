@@ -1,0 +1,15 @@
+# Exclude heavy build artifacts and caches from Cursor AI context
+node_modules/
+.next/
+out/
+dist/
+build/
+__pycache__/
+.venv/
+env/
+venv/
+*.pyc
+*.pyo
+alembic/versions/
+*.log
+
