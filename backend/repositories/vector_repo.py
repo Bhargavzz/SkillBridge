@@ -1,17 +1,10 @@
 from typing import Any
 
-from pgvector.sqlalchemy import Vector
-from sqlalchemy import Column, Integer, String, Text
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from core.exceptions import VectorStoreError
-
-
-class JobDocument:
-    """Minimal ORM-like descriptor — replace with a proper SQLAlchemy model."""
-    id: int
-    content: str
-    embedding: list[float]
+from models.orm import JobEmbedding, JobPosting
 
 
 class VectorRepository:
@@ -24,15 +17,19 @@ class VectorRepository:
         self, embedding: list[float], top_k: int = 5
     ) -> list[dict[str, Any]]:
         try:
-            # Placeholder — replace with actual SQLAlchemy pgvector query
-            # e.g.: self._db.execute(select(JobDocument).order_by(JobDocument.embedding.l2_distance(embedding)).limit(top_k))
-            return []
+            rows = self._db.execute(
+                select(JobPosting.job_title, JobPosting.company, JobPosting.raw_content)
+                .join(JobEmbedding, JobEmbedding.job_id == JobPosting.id)
+                .order_by(JobEmbedding.embedding.cosine_distance(embedding))
+                .limit(top_k)
+            ).mappings().all()
+            return [dict(row) for row in rows]
         except Exception as exc:
             raise VectorStoreError("Similarity search failed") from exc
 
     def upsert_document(self, content: str, embedding: list[float]) -> None:
         try:
-            # Placeholder — replace with actual upsert logic
+            # Full upsert logic will be implemented in the data-ingestion pipeline.
             pass
         except Exception as exc:
             raise VectorStoreError("Document upsert failed") from exc
