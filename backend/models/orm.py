@@ -69,7 +69,7 @@ class JobPosting(Base):
     source: Mapped[str] = mapped_column(String)  # e.g., LinkedIn, Wellfound
     created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
 
-    embeddings: Mapped[Optional["JobEmbedding"]] = relationship(back_populates="job", uselist=False, cascade="all, delete-orphan")
+    embedding: Mapped[Optional["JobEmbedding"]] = relationship(back_populates="job", uselist=False, cascade="all, delete-orphan")
 
 
 class JobEmbedding(Base):
@@ -79,7 +79,7 @@ class JobEmbedding(Base):
     job_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("job_postings.id", ondelete="CASCADE"),unique=True)
     embedding: Mapped[Vector] = mapped_column(Vector(1024))
 
-    job: Mapped["JobPosting"] = relationship(back_populates="embeddings")
+    job: Mapped["JobPosting"] = relationship(back_populates="embedding")
 
 
 class Course(Base):
@@ -92,7 +92,7 @@ class Course(Base):
     raw_content: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
 
-    embeddings: Mapped[Optional["CourseEmbedding"]] = relationship(back_populates="course", uselist=False, cascade="all, delete-orphan")
+    embedding: Mapped[Optional["CourseEmbedding"]] = relationship(back_populates="course", uselist=False, cascade="all, delete-orphan")
 
 
 class CourseEmbedding(Base):
@@ -102,7 +102,7 @@ class CourseEmbedding(Base):
     course_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("courses.id", ondelete="CASCADE"),unique=True)
     embedding: Mapped[Vector] = mapped_column(Vector(1024))
 
-    course: Mapped["Course"] = relationship(back_populates="embeddings")
+    course: Mapped["Course"] = relationship(back_populates="embedding")
 
 
 # HNSW indexes must be defined after table classes are declared so SQLAlchemy
