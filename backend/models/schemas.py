@@ -1,4 +1,37 @@
-from pydantic import BaseModel, HttpUrl
+import uuid
+
+from pydantic import BaseModel, ConfigDict, EmailStr, HttpUrl
+
+
+# ==========================================
+# Auth Schemas
+# ==========================================
+
+
+class UserCreate(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class UserRead(BaseModel):
+    id: uuid.UUID
+    email: EmailStr
+    is_active: bool
+    model_config = ConfigDict(from_attributes=True)
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+
+
+class TokenData(BaseModel):
+    email: str | None = None
+
+
+# ==========================================
+# Analysis Schemas
+# ==========================================
 
 
 class AnalysisRequest(BaseModel):
