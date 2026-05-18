@@ -3,6 +3,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 
 from api.dependencies import get_db_session
 from core.exceptions import AuthenticationError
@@ -23,7 +24,17 @@ def signup(
             status_code=status.HTTP_409_CONFLICT,
             detail="An account with this email already exists.",
         )
-    user = UserRepository.create_user(db, user_in)
+    try:
+        user = UserRepository.create_user(db, user_in)
+
+    except IntegrityError:
+        db.rollback()
+
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="An account with this email already exists.",
+        )
+
     return UserRead.model_validate(user)
 
 
