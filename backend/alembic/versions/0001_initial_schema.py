@@ -38,7 +38,7 @@ def upgrade() -> None:
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
         sa.Column("user_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("target_role", sa.String(), nullable=False),
-        sa.Column("status", sa.String(), nullable=True),
+        sa.Column("status", sa.String(), nullable=False, server_default="processing"),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=True),
         sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
     )

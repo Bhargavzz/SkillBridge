@@ -36,7 +36,7 @@ class Session(Base):
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
     target_role: Mapped[str] = mapped_column(String, nullable=False)
-    status: Mapped[str] = mapped_column(String, default="processing")  # processing, completed, failed
+    status: Mapped[str] = mapped_column(String, default="processing", nullable=False)  # processing, completed, failed
     created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
 
     user: Mapped["User"] = relationship(back_populates="sessions")
@@ -64,9 +64,9 @@ class JobPosting(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     job_title: Mapped[str] = mapped_column(String, nullable=False)
-    company: Mapped[str] = mapped_column(String)
+    company: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     raw_content: Mapped[str] = mapped_column(Text, nullable=False)
-    source: Mapped[str] = mapped_column(String)  # e.g., LinkedIn, Wellfound
+    source: Mapped[Optional[str]] = mapped_column(String, nullable=True)  # e.g., LinkedIn, Wellfound
     created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
 
     embedding: Mapped[Optional["JobEmbedding"]] = relationship(back_populates="job", uselist=False, cascade="all, delete-orphan")
@@ -87,7 +87,7 @@ class Course(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     title: Mapped[str] = mapped_column(String, nullable=False)
-    provider: Mapped[str] = mapped_column(String)  # e.g., Coursera, Udemy
+    provider: Mapped[Optional[str]] = mapped_column(String, nullable=True)  # e.g., Coursera, Udemy
     url: Mapped[str] = mapped_column(String, nullable=False)
     raw_content: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
