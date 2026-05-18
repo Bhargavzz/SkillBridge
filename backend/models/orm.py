@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from typing import List, Optional
 
 from pgvector.sqlalchemy import Vector
-from sqlalchemy import ForeignKey, Index, String, Text
+from sqlalchemy import ForeignKey, Index, String, Text, func
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -24,7 +24,7 @@ class User(Base):
     email: Mapped[str] = mapped_column(String, unique=True, index=True, nullable=False)
     hashed_password: Mapped[str] = mapped_column(String, nullable=False)
     github_username: Mapped[Optional[str]] = mapped_column(String)
-    created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
+    created_at: Mapped[datetime] = mapped_column(nullable=False, server_default=func.now())
 
     sessions: Mapped[List["Session"]] = relationship(back_populates="user", cascade="all, delete-orphan")
 
@@ -36,8 +36,8 @@ class Session(Base):
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
     target_role: Mapped[str] = mapped_column(String, nullable=False)
-    status: Mapped[str] = mapped_column(String, default="processing")  # processing, completed, failed
-    created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
+    status: Mapped[str] = mapped_column(String, default="processing", nullable=False)  # processing, completed, failed
+    created_at: Mapped[datetime] = mapped_column(nullable=False, server_default=func.now())
 
     user: Mapped["User"] = relationship(back_populates="sessions")
     roadmap: Mapped[Optional["Roadmap"]] = relationship(back_populates="session", uselist=False, cascade="all, delete-orphan")
@@ -49,7 +49,7 @@ class Roadmap(Base):
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     session_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("sessions.id", ondelete="CASCADE"), unique=True)
     roadmap_data: Mapped[dict] = mapped_column(JSONB, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
+    created_at: Mapped[datetime] = mapped_column(nullable=False, server_default=func.now())
 
     session: Mapped["Session"] = relationship(back_populates="roadmap")
 
@@ -64,10 +64,10 @@ class JobPosting(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     job_title: Mapped[str] = mapped_column(String, nullable=False)
-    company: Mapped[str] = mapped_column(String)
+    company: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     raw_content: Mapped[str] = mapped_column(Text, nullable=False)
-    source: Mapped[str] = mapped_column(String)  # e.g., LinkedIn, Wellfound
-    created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
+    source: Mapped[Optional[str]] = mapped_column(String, nullable=True)  # e.g., LinkedIn, Wellfound
+    created_at: Mapped[datetime] = mapped_column(nullable=False, server_default=func.now())
 
     embedding: Mapped[Optional["JobEmbedding"]] = relationship(back_populates="job", uselist=False, cascade="all, delete-orphan")
 
@@ -77,7 +77,7 @@ class JobEmbedding(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     job_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("job_postings.id", ondelete="CASCADE"),unique=True)
-    embedding: Mapped[Vector] = mapped_column(Vector(1024))
+    embedding: Mapped[Vector] = mapped_column(Vector(1024), nullable=False)
 
     job: Mapped["JobPosting"] = relationship(back_populates="embedding")
 
@@ -87,10 +87,10 @@ class Course(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     title: Mapped[str] = mapped_column(String, nullable=False)
-    provider: Mapped[str] = mapped_column(String)  # e.g., Coursera, Udemy
+    provider: Mapped[Optional[str]] = mapped_column(String, nullable=True)  # e.g., Coursera, Udemy
     url: Mapped[str] = mapped_column(String, nullable=False)
     raw_content: Mapped[str] = mapped_column(Text, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
+    created_at: Mapped[datetime] = mapped_column(nullable=False, server_default=func.now())
 
     embedding: Mapped[Optional["CourseEmbedding"]] = relationship(back_populates="course", uselist=False, cascade="all, delete-orphan")
 
@@ -100,7 +100,7 @@ class CourseEmbedding(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     course_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("courses.id", ondelete="CASCADE"),unique=True)
-    embedding: Mapped[Vector] = mapped_column(Vector(1024))
+    embedding: Mapped[Vector] = mapped_column(Vector(1024), nullable=False)
 
     course: Mapped["Course"] = relationship(back_populates="embedding")
 

@@ -1,0 +1,2 @@
+# Placeholder to ensure the public/ directory exists.
+# Dockerfile.frontend copies this directory to serve static assets in production.
