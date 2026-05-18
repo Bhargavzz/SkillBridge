@@ -19,6 +19,8 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
+    op.execute("CREATE EXTENSION IF NOT EXISTS vector")
+
     op.create_table(
         "users",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
@@ -26,7 +28,7 @@ def upgrade() -> None:
         sa.Column("hashed_password", sa.String(), nullable=False),
         sa.Column("github_username", sa.String(), nullable=True),
         sa.Column("is_active", sa.Boolean(), nullable=False, server_default=sa.true()),
-        sa.Column("created_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
         sa.UniqueConstraint("email"),
     )
     op.create_index("ix_users_email", "users", ["email"])
@@ -36,8 +38,8 @@ def upgrade() -> None:
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
         sa.Column("user_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("target_role", sa.String(), nullable=False),
-        sa.Column("status", sa.String(), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("status", sa.String(), nullable=False, server_default="processing"),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
         sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
     )
 
@@ -46,7 +48,7 @@ def upgrade() -> None:
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
         sa.Column("session_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("roadmap_data", postgresql.JSONB(), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
         sa.ForeignKeyConstraint(["session_id"], ["sessions.id"], ondelete="CASCADE"),
         sa.UniqueConstraint("session_id"),
     )
@@ -58,14 +60,14 @@ def upgrade() -> None:
         sa.Column("company", sa.String(), nullable=True),
         sa.Column("raw_content", sa.Text(), nullable=False),
         sa.Column("source", sa.String(), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
     )
 
     op.create_table(
         "job_embeddings",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
         sa.Column("job_id", postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column("embedding", Vector(1024), nullable=True),
+        sa.Column("embedding", Vector(1024), nullable=False),
         sa.ForeignKeyConstraint(["job_id"], ["job_postings.id"], ondelete="CASCADE"),
         sa.UniqueConstraint("job_id"),
     )
@@ -77,14 +79,14 @@ def upgrade() -> None:
         sa.Column("provider", sa.String(), nullable=True),
         sa.Column("url", sa.String(), nullable=False),
         sa.Column("raw_content", sa.Text(), nullable=False),
-        sa.Column("created_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.text("now()")),
     )
 
     op.create_table(
         "course_embeddings",
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
         sa.Column("course_id", postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column("embedding", Vector(1024), nullable=True),
+        sa.Column("embedding", Vector(1024), nullable=False),
         sa.ForeignKeyConstraint(["course_id"], ["courses.id"], ondelete="CASCADE"),
         sa.UniqueConstraint("course_id"),
     )
@@ -110,3 +112,4 @@ def downgrade() -> None:
     op.drop_table("sessions")
     op.drop_index("ix_users_email", table_name="users")
     op.drop_table("users")
+    op.execute("DROP EXTENSION IF EXISTS vector")

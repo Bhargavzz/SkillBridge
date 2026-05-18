@@ -6,7 +6,7 @@ authors = ["Vishnu Bhargav <vishnubhargavsitra@gmail.com>"]
 package-mode = false
 
 [tool.poetry.dependencies]
-python = "3.11.9"
+python = "^3.11"
 fastapi = "^0.110.0"
 uvicorn = {extras = ["standard"], version = "^0.28.0"}
 langgraph = "^0.0.30"

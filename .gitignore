@@ -48,10 +48,10 @@ alembic/versions/*.pyc
 *.log
 
 .cursor/
+.github/
 
-
-# --- local md ---
-backend/er_diagram.md
+#--- md ----
 implementation_plan.md
-migration_blueprint.md
 production_roadmap.md
+migration_blueprint.md
+backend/er_diagram.md

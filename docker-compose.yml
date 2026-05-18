@@ -1,0 +1,82 @@
+services:
+
+  # ── PostgreSQL + pgvector ────────────────────────────────────────────────────
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: skillbridge-db
+    restart: unless-stopped
+    env_file:
+      - .env                          # reads POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Alembic Migrations Service ───────────────────────────────────────────────
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: skillbridge-migrate
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      CHECKPOINT_DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+    command: ["sh", "-c", "alembic upgrade head"]
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+  # ── FastAPI Backend ──────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: skillbridge-backend
+    restart: unless-stopped
+    env_file:
+      - .env                          # loads all secrets (GROQ_API_KEY, SECRET_KEY, etc.)
+    environment:
+      # Override DB URLs — host must be 'db' (Docker service name) not localhost
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      CHECKPOINT_DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+    ports:
+      - "8000:8000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  # ── Next.js Frontend ─────────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+      args:
+        # Browser-side JS talks to the host-exposed port, not the container name
+        NEXT_PUBLIC_API_URL: http://localhost:8000/api/v1
+    container_name: skillbridge-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+
+volumes:
+  pgdata:
+    name: skillbridge-pgdata
+
