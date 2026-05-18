@@ -40,7 +40,7 @@ frontend/
 
 ## Running via Docker (recommended)
 
-From the **project root** (`jd_agent/`):
+From the **project root** (`SkillBridge/`):
 
 ```bash
 docker compose up --build
