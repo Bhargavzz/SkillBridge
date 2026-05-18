@@ -1,6 +1,6 @@
 import uuid
 
-from pydantic import BaseModel, ConfigDict, EmailStr, HttpUrl
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, HttpUrl
 
 
 # ==========================================
@@ -10,7 +10,7 @@ from pydantic import BaseModel, ConfigDict, EmailStr, HttpUrl
 
 class UserCreate(BaseModel):
     email: EmailStr
-    password: str
+    password: str = Field(min_length=8, max_length=128)
 
 
 class UserRead(BaseModel):
