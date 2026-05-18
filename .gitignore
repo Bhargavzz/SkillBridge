@@ -45,3 +45,10 @@ alembic/versions/*.pyc
 *.log
 
 .cursor/
+.github/
+
+#--- md ----
+implementation_plan.md
+production_roadmap.md
+migration_blueprint.md
+backend/er_diagram.md
