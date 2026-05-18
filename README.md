@@ -5,7 +5,7 @@ AI-powered career skill gap analysis and personalised learning roadmap generator
 ## Architecture
 
 ```
-jd_agent/
+./
 ├── backend/          # FastAPI + LangGraph + pgvector
 ├── frontend/         # Next.js App Router + shadcn/ui + Tailwind
 ├── Dockerfile.backend
@@ -41,7 +41,7 @@ Each node lives in its own file under `backend/agents/`. The vector DB is only t
 ```bash
 # 1. Clone
 git clone <repo-url>
-cd jd_agent
+cd SkillBridge
 
 # 2. Copy the example env and fill in your credentials
 cp .env.example .env
