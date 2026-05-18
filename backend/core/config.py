@@ -1,10 +1,27 @@
+import os
 from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-# Resolve the root-level .env regardless of the working directory:
-# backend/core/config.py → backend/core/ → backend/ → project_root/
-_ROOT_ENV = Path(__file__).resolve().parents[2] / ".env"
+
+def resolve_env_file() -> Path:
+    env_override = os.getenv("ENV_FILE")
+
+    if env_override:
+        return Path(env_override).expanduser().resolve()
+
+    current = Path(__file__).resolve().parent
+
+    for directory in [current, *current.parents]:
+        candidate = directory / ".env"
+
+        if candidate.is_file():
+            return candidate
+
+    return Path(".env")
+
+
+_ROOT_ENV = resolve_env_file()
 
 
 class Settings(BaseSettings):
@@ -18,9 +35,10 @@ class Settings(BaseSettings):
     postgres_db: str = "skillbridge"
 
     model_config = SettingsConfigDict(
-        env_file=str(_ROOT_ENV),
-        env_file_encoding="utf-8",
+        env_file=_ROOT_ENV,
+        extra="ignore",
     )
 
 
 settings = Settings()
+
