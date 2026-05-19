@@ -1,3 +1,4 @@
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from models.orm import User
@@ -8,7 +9,8 @@ from core.security import hash_password
 class UserRepository:
     @staticmethod
     def get_by_email(db: Session, email: str) -> User | None:
-        return db.query(User).filter(User.email == email).first()
+        statement = select(User).where(User.email == email)
+        return db.execute(statement).scalar_one_or_none()
 
     @staticmethod
     def create_user(db: Session, user_in: UserCreate) -> User:
