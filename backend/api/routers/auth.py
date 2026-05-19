@@ -6,7 +6,6 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
 from api.dependencies import get_db_session
-from core.exceptions import AuthenticationError
 from core.security import create_access_token, verify_password
 from models.schemas import Token, UserCreate, UserRead
 from repositories.user_repo import UserRepository
@@ -45,7 +44,15 @@ def login(
 ) -> Token:
     user = UserRepository.get_by_email(db, form.username)
     if not user or not verify_password(form.password, user.hashed_password):
-        raise AuthenticationError("Incorrect email or password")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     if not user.is_active:
-        raise AuthenticationError("Account is inactive")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Account is inactive",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     return Token(access_token=create_access_token(user.email))
