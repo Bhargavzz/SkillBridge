@@ -76,3 +76,12 @@ class GraphExecutionError(SkillBridgeAPIException):
         description: str | None = None,
     ) -> None:
         super().__init__(500, "GRAPH_EXECUTION_ERROR", message, description)
+
+
+class AuthenticationError(SkillBridgeAPIException):
+    def __init__(
+        self,
+        message: str = "Authentication failed",
+        description: str | None = None,
+    ) -> None:
+        super().__init__(401, "AUTHENTICATION_ERROR", message, description)

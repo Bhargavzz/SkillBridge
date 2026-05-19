@@ -1,9 +1,11 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request
+from fastapi import Depends, FastAPI, Request
 from fastapi.responses import JSONResponse
 
+from api.dependencies import get_current_user
 from api.routers import analysis, health
+from api.routers import auth
 from core.exceptions import SkillBridgeAPIException
 
 
@@ -26,4 +28,9 @@ async def skillbridge_exception_handler(request: Request, exc: SkillBridgeAPIExc
 
 
 app.include_router(health.router, prefix="/api/v1")
-app.include_router(analysis.router, prefix="/api/v1")
+app.include_router(auth.router, prefix="/api/v1")
+app.include_router(
+    analysis.router,
+    prefix="/api/v1",
+    dependencies=[Depends(get_current_user)],
+)

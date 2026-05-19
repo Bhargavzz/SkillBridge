@@ -41,6 +41,9 @@ Thumbs.db
 # ---- Alembic ----
 alembic/versions/*.pyc
 
+# ---- GitHub ----
+.github/
+
 # ---- Misc ----
 *.log
 
